@@ -5,7 +5,9 @@ class Message < Notification
   validates_presence_of :sender
 
   class_attribute :on_deliver_callback
+  class_attribute :before_deliver_callback
   protected :on_deliver_callback
+  protected :before_deliver_callback
   scope :conversation, lambda { |conversation|
     where(:conversation_id => conversation.id)
   }
@@ -19,6 +21,11 @@ class Message < Notification
     def on_deliver(callback_method)
       self.on_deliver_callback = callback_method
     end
+
+    def before_deliver(callback_method)
+      self.before_deliver_callback = callback_method
+    end
+
   end
 
   #Delivers a Message. USE NOT RECOMENDED.
@@ -38,6 +45,8 @@ class Message < Notification
       temp_receipts.each(&:save!) 	#Save receipts
       #Should send an email?
       if Mailboxer.uses_emails
+        self.before_deliver_callback.call(self) unless self.before_deliver_callback.nil?
+
         if Mailboxer.mailer_wants_array
           get_mailer.send_email(self, recipients).deliver
         else
