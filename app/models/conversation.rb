@@ -130,6 +130,7 @@ class Conversation < ActiveRecord::Base
 		  receipt.created_at = message.created_at
 		  receipt.save
 		end
+    @last_message = nil
 	end
 
   #Returns true if the participant has at least one trashed message of the conversation
